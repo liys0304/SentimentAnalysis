@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舆情分析系统</title>
+</head>
+<body>
+    <h1>舆情分析系统</h1>
+    <p>欢迎使用我们的舆情分析系统！请在下面输入您想要分析的话题。</p>
+
+    <form action="/analyze" method="post">
+        <label for="topic">话题：</label>
+        <input type="text" id="topic" name="topic" required>
+        <input type="submit" value="分析">
+    </form>
+
+    <!-- 显示分析结果 -->
+    <h2>分析结果</h2>
+    <h3>趋势预测</h3>
+    <img id="trendImage" src="" alt="趋势预测图" style="display: none;">
+
+    <h3>情感分布</h3>
+    <img id="sentimentImage" src="" alt="情感分布图" style="display: none;">
+
+    <h2>结果说明</h2>
+    <p id="resultExplanation"></p>
+
+    <script>
+        // 监听表单提交
+        document.querySelector('form').onsubmit = async function (e) {
+            e.preventDefault();
+            const topic = document.getElementById('topic').value;
+            const response = await fetch(`/analyze?topic=${topic}`);
+            const data = await response.json();
+
+            // 更新图片和结果说明
+            document.getElementById('trendImage').src = data.trend_image;
+            document.getElementById('trendImage').style.display = 'block';
+            document.getElementById('sentimentImage').src = data.sentiment_image;
+            document.getElementById('sentimentImage').style.display = 'block';
+            document.getElementById('resultExplanation').innerText = data.explanation;
+        };
+    </script>
+</body>
+</html>
