@@ -49,7 +49,7 @@ def sentiment_analysis(topic):
     future_comment = daily_sentiment_ratio['total_comments'][-1] + comments_change[-1]
 
     # 绘制折线图
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(8, 6))
     for category in daily_sentiment_ratio.columns[:-1]:  # 排除总评论数
         plt.plot(daily_sentiment_ratio.index, daily_sentiment_ratio[category], marker='o', label=category)
 
@@ -63,7 +63,7 @@ def sentiment_analysis(topic):
     plt.close()
 
     # 绘制柱状图
-    daily_sentiment_count.plot(kind='bar', figsize=(12, 6))
+    daily_sentiment_count.plot(kind='bar', figsize=(8, 6))
     plt.title("statistics data in past five days")
     plt.xlabel("date")
     plt.ylabel("total comments")
