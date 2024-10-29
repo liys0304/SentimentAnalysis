@@ -40,6 +40,9 @@ try:
     ax.axis("off")
     fig.savefig("./src/wordcloud.png", dpi=500)
     st.image("./src/wordcloud.png", width=700)
+    with st.sidebar:
+        st.write("请不要开代理运行网页！")
+        
     # 输入框，on_change 触发清除报错
     with st.form(key='input_style'):
         user_input = st.text_input("输入一个感兴趣的话题：")
@@ -47,11 +50,6 @@ try:
         max_count = st.select_slider('选择想要爬取的数据数量,不建议超过200（慢）', range(50, 501))
 
     if user_input and submit_button:
-        # with st.sidebar:
-        #     add_radio = st.radio(
-        #         "Choose a shipping method",
-        #         ("Standard (5-15 days)", "Express (2-5 days)")
-        #     )
         progress_bar = st.progress(0)
         file_path = f"./topic_tmp/{user_input}.csv"
         delete_temp_file(file_path)

@@ -1,5 +1,4 @@
-from cProfile import label
-import streamlit
+
 import requests
 from urllib.parse import urlencode
 import time
@@ -11,15 +10,17 @@ from pyquery import PyQuery as pq
 import tensorflow as tf
 from tornado.gen import multi
 
-from sentiment_based_dic import compute_score
+import sentiment_based_dic
 import numpy as np
 
+from sentiment_based_dic import SentimentByDic
 from sentiment_based_ml import SentimentPipeline
 
 model_path = "best_sentiment_classification/"
 label_path = "./data/labels.json"
 classify_model = tf.keras.models.load_model('classify.keras')
 pipeline = SentimentPipeline(model_path, label_path)
+sentiment_dic = SentimentByDic()
 
 # 设置代理等（新浪微博的数据是用ajax异步下拉加载的，network->xhr）
 host = 'm.weibo.cn'
@@ -132,18 +133,9 @@ def parse_page(json_data):
         if item:
             src_text = pq(item.get("text")).text()
             text = re.sub(r'#.*?#', "", src_text).strip()
-            sentiment_score = compute_score(text, item.get('attitudes_count'))
-            probabilities = classify_model.predict([sentiment_score])
-            predicted_class = np.argmax(probabilities, axis=1)
+            predicted_class = sentiment_dic(text, item.get('attitudes_count'))
             texts = [text]
             multi_class_predict = pipeline(texts)[0]['label']
-            # print("DEBUG:", multi_class_predict, pq(item.get("text")).text())
-            if predicted_class == [0]:
-                predicted_class = "neg"
-            elif predicted_class == [1]:
-                predicted_class = "neu"
-            else:
-                predicted_class = "pos"
             if item.get('isLongText') is False:  # 不是长文本
                 data = {
                     # 'wid': item.get('id'),
@@ -152,8 +144,7 @@ def parse_page(json_data):
                     # 'gender': item.get('user').get('gender'),
                     'publish_time': time_formater(item.get('created_at')),
                     'text': pq(item.get("text")).text(),  # 仅提取内容中的文本
-                    'like_count': item.get('attitudes_count'),  # 点赞数
-                    'sentiment_score': sentiment_score,  # 情感得分
+                    'like_count': item.get('attitudes_count'),  # 点赞数  # 情感得分
                     'predict_by_dic': predicted_class,  # 分类结果
                     'predict_by_bert': multi_class_predict,
                     # 'comment_count': item.get('comments_count'),  # 评论数
@@ -169,7 +160,6 @@ def parse_page(json_data):
                     'publish_time': time_formater(item.get('created_at')),
                     'text': tmp,  # 仅提取内容中的文本
                     'like_count': item.get('attitudes_count'),
-                    'sentiment_score': sentiment_score,
                     'predict_by_dic': predicted_class,
                     'predict_by_bert': multi_class_predict,
                     # 'comment_count': item.get('comments_count'),
@@ -201,7 +191,6 @@ def spider(keyword, max_count=100, progress_bar=None):
         json_data = get_single_page(page, keyword)
         if json_data == None:
             print('json is none')
-            break
         if len(json_data.get('data').get('cards')) <= 0:
             empty_times += 1
         else:

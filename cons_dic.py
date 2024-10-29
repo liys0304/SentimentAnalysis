@@ -21,7 +21,6 @@ def load_extent_dict(file_name):
             line = line.strip()
             line = line.split(',')
             extent_dict[line[0]] = line[1]
-        print(extent_dict)
     return extent_dict
 
 post_dict = load_dict(u"dict/正面情绪词.txt", 1)  # 积极情感词典
