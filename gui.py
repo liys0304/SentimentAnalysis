@@ -8,7 +8,10 @@ import wb_spider
 from wb_spider import spider, daily_topic
 import os
 import matplotlib.pyplot as plt
+from  matplotlib import rcParams
 from wordcloud import WordCloud
+from scipy.stats import poisson
+import numpy as np
 
 #错误处理
 if "error" not in st.session_state:
@@ -120,6 +123,45 @@ try:
                 st.pyplot(fig2)
         with comment:
             st.dataframe(sampled_data)
+
+        # 预测部份
+        # 设置字体避免乱码
+        rcParams['font.sans-serif'] = ['SimHei']
+        rcParams['axes.unicode_minus'] = False
+
+        lambda_dic_hour = predict_by_dic_hours.mean().mean()
+        lambda_bert_hour = predict_by_bert_days.mean().mean()
+
+        # 计算泊松分布参数
+        lambda_positive = predict_by_dic_hours['positive'].mean()  # 积极分类的均值
+        lambda_negative = predict_by_dic_hours['negative'].mean()  # 消极分类的均值
+        lambda_total = predict_by_dic_hours.sum(axis=1).mean()  # 总热度均值
+
+        # 预测未来12小时的舆情热度
+        future_hours = np.arange(1, 13)
+        pred_positive = poisson.rvs(lambda_positive, size=len(future_hours))
+        pred_negative = poisson.rvs(lambda_negative, size=len(future_hours))
+        pred_total = poisson.rvs(lambda_total, size=len(future_hours))
+
+        # 绘制预测结果
+        # fig, ax = plt.subplots(figsize=(10, 6))
+        # ax.plot(future_hours, pred_positive, label="积极热度", marker='o', color='green')
+        # ax.plot(future_hours, pred_negative, label="消极热度", marker='o', color='red')
+        # ax.plot(future_hours, pred_total, label="总热度", marker='o', color='blue')
+        # ax.set_xlabel("未来小时数")
+        # ax.set_ylabel("预测热度")
+        # ax.set_title("未来舆情热度预测")
+        # ax.legend()
+        # st.pyplot(fig)
+
+        st.write("积极评论走势")
+        st.line_chart(pred_positive)
+
+        st.write("消极评论走势")
+        st.line_chart(pred_negative)
+
+        st.write("总评论热度走势")
+        st.line_chart(pred_total)
 
 except PermissionError:
     st.session_state.error = "请先不要打开爬取的excel文件！"
